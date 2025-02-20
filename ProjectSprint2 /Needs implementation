@@ -1,0 +1,32 @@
+Codes to implement
+
+Sorting Function for dropbox
+  -Sorts listbox content
+  -Will show default when "Sort by" is selected
+  -Automatically sorts when options are selected
+
+Group by category Function for dropbox
+  -Groups listbox content by hiding notes not part of category
+  -Will show default when "Group by" is selected
+  -Automatically grpups when options are selected
+
+Category Manager UI
+  -Can edit groupOpt list to manage category options:
+    -Create category
+    -Update category
+    -Delete category
+
+Delete Function
+  -Deletes selected file in listbox
+  -Prompt opens to confirm the deleting of selected file
+
+Create Notes UI
+  -Dropdown menu for category
+  -Options managed by Category Manager
+
+Find in Notes function
+  -Finds words typed in textbox in existing files
+  -Only shows files in listbox with similar text after pressing button
+
+Load notes in text editor box when selecting file
+  -Implement save changes button and function
