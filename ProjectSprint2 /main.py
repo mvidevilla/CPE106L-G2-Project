@@ -1,62 +1,87 @@
 import tkinter as tk
-from tkinter import scrolledtext
-from CRUD import load_note, save_note, fetch_notes, init_db, create_note
+import sqlite3
+from CRUD import init_db, create_note
 
 init_db()
 
-def load_selected_note():
-    """Loads the selected note into the text editor."""
-    noteName = nBox.get(tk.ACTIVE)
+def load_notes():
+    conn = sqlite3.connect("notes.db")
+    cursor = conn.cursor()
 
-    if not noteName:
-        return
+    cursor.execute("SELECT noteName, noteCreate, category FROM notes")
+    notes = cursor.fetchall()
+    notesList.delete(0, tk.END)
 
-    cont, fPath = load_note(noteName)
+    for note in notes:
+        note_entry = f"{note[0]} | {note[1]} | {note[2]}"
+        notesList.insert(tk.END, note_entry)
+    conn.close()
 
-    if cont is not None:
-        tEditor.delete("1.0", tk.END)
-        tEditor.insert(tk.END, cont)
-        tEditor.fPath = fPath
-        saveButton.config(state=tk.NORMAL)
 
-def save_changes():
-    fPath = getattr(tEditor, "fPath", None)
-    if fPath:
-        cont = tEditor.get("1.0", tk.END)
-        save_note(fPath, cont)
-
-def refresh_notes():
-    nBox.delete(0, tk.END)
-    for note in fetch_notes():
-        nBox.insert(tk.END, note)
+def loadEditorBox():
+    from tkinter import scrolledtext
+    tEditor = scrolledtext.ScrolledText(root, width=41, height=37)
+    tEditor.grid(padx=5, pady=5, sticky=tk.E, row=0, column=1,rowspan=7)
 
 root = tk.Tk()
-root.title("Note Editor")
+root.title("Notes Organization System")
 
 frame = tk.Frame(root)
-frame.pack(pady=10)
-
-nBox = tk.Listbox(frame, width=40, height=10)
-nBox.pack(side=tk.LEFT, padx=10)
+frame.grid()
+root.minsize(560,560)
 
 scrollbar = tk.Scrollbar(frame, orient=tk.VERTICAL)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-nBox.config(yscrollcommand=scrollbar.set)
-scrollbar.config(command=nBox.yview)
+createButton = tk.Button(frame, text="Create Note", command=create_note)
+createButton.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+createButton.config(width=25)
 
-loadButton = tk.Button(root, text="Load Note", command=load_selected_note)
-loadButton.pack(pady=5)
+deleteButton = tk.Button(frame, text="Delete Note")
+deleteButton.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+deleteButton.config(width=25)
 
-newNote = tk.Button(root, text="New Note", command=lambda: create_note(refresh_notes))
-newNote.pack(pady=10)
+sortOpt = [
+    "Sort by",
+    "Name (Ascending)",
+    "Name (Descending)",
+    "Date Created (Ascending)",
+    "Date Created (Descending)"
+]
 
-tEditor = scrolledtext.ScrolledText(root, width=60, height=20)
-tEditor.pack(pady=10)
+groupOpt = [
+    "Group by"
+]
 
-saveButton = tk.Button(root, text="Save Changes", command=save_changes, state=tk.DISABLED)
-saveButton.pack(pady=5)
+sortVar = tk.StringVar(frame)
+sortVar.set(sortOpt[0])
 
-refresh_notes()
+sorting = tk.OptionMenu(frame, sortVar, *sortOpt)
+sorting.grid(row=2, column=0, sticky=tk.W, padx=1, pady=5)
+sorting.config(width=24)
 
+groupVar = tk.StringVar(frame)
+groupVar.set(groupOpt[0])
+
+grouping = tk.OptionMenu(frame, groupVar, *groupOpt)
+grouping.grid(row=3, column=0, sticky=tk.W, padx=1, pady=5)
+grouping.config(width=24) 
+
+manageCategories = tk.Button(frame, text="Manage Categories")
+manageCategories.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
+manageCategories.config(width=25)
+
+searchBox = tk.Text(frame, width=22,height=2)
+searchBox.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
+searchBox.config(yscrollcommand=scrollbar.set)
+scrollbar.grid(column=0, row=5, sticky=tk.E)
+scrollbar.config(command=searchBox.yview)
+
+findButton = tk.Button(frame, text="Find in Notes")
+findButton.grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
+findButton.config(width=25)
+
+notesList = tk.Listbox(frame, width=30, height=20)
+notesList.grid(row=7, column=0, padx=5, pady=5, sticky=tk.W)
+
+load_notes()
 root.mainloop()
