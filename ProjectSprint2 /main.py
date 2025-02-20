@@ -1,6 +1,7 @@
 import tkinter as tk
+from tkinter import scrolledtext
 import sqlite3
-from CRUD import init_db, create_note
+from CRUD import init_db, create_note, save_note
 
 init_db()
 
@@ -8,31 +9,37 @@ def load_notes():
     conn = sqlite3.connect("notes.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT noteName, noteCreate, category FROM notes")
+    cursor.execute("SELECT noteName, category FROM notes")
     notes = cursor.fetchall()
     notesList.delete(0, tk.END)
 
     for note in notes:
-        note_entry = f"{note[0]} | {note[1]} | {note[2]}"
+        note_entry = f"{note[0]} | {note[1]}"
         notesList.insert(tk.END, note_entry)
     conn.close()
 
 
-def loadEditorBox():
-    from tkinter import scrolledtext
+def loadEditorBox(event):
     tEditor = scrolledtext.ScrolledText(root, width=41, height=37)
-    tEditor.grid(padx=5, pady=5, sticky=tk.E, row=0, column=1,rowspan=7)
+    tEditor.grid(padx=5, sticky=tk.NE, row=0, column=1,rowspan=7)
+
+    saveButton = tk.Button(root, text="Save Changes", state=tk.DISABLED)
+    saveButton.grid(padx=5, sticky=tk.NE, row=7, column=1)
+
+def createButtonFunc():
+    create_note()
+    load_notes()
 
 root = tk.Tk()
 root.title("Notes Organization System")
 
 frame = tk.Frame(root)
 frame.grid()
-root.minsize(560,560)
+root.minsize(560,660)
 
 scrollbar = tk.Scrollbar(frame, orient=tk.VERTICAL)
 
-createButton = tk.Button(frame, text="Create Note", command=create_note)
+createButton = tk.Button(frame, text="Create Note", command=createButtonFunc)
 createButton.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 createButton.config(width=25)
 
@@ -80,8 +87,12 @@ findButton = tk.Button(frame, text="Find in Notes")
 findButton.grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
 findButton.config(width=25)
 
+header = tk.Label(frame, text="Name          |          Category")
+header.grid(row=7,column=0,sticky=tk.W, padx=5)
+
 notesList = tk.Listbox(frame, width=30, height=20)
-notesList.grid(row=7, column=0, padx=5, pady=5, sticky=tk.W)
+notesList.grid(row=8, column=0, padx=5, pady=5, sticky=tk.W)
+notesList.bind("<Double-Button-1>", loadEditorBox)
 
 load_notes()
 root.mainloop()
