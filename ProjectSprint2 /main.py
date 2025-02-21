@@ -39,7 +39,7 @@ root.minsize(560,660)
 
 scrollbar = tk.Scrollbar(frame, orient=tk.VERTICAL)
 
-createButton = tk.Button(frame, text="Create Note", command=createButtonFunc)
+createButton = tk.Button(frame, text="Create Note", command=lambda: create_note(load_notes))
 createButton.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 createButton.config(width=25)
 
