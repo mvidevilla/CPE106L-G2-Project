@@ -21,7 +21,6 @@ Delete Function
   -Prompt opens to confirm the deleting of selected file
 
 Create Notes UI
-  -Dropdown menu for category
   -Options managed by Category Manager
 
 Find in Notes function
@@ -30,3 +29,4 @@ Find in Notes function
 
 Load notes in text editor box when selecting file
   -Implement save changes button and function
+  -Implement discard changes button and function
