@@ -6,10 +6,6 @@ Category Manager UI
     -Update category
     -Delete category
 
-Delete Function
-  -Deletes selected file in listbox
-  -Prompt opens to confirm the deleting of selected file
-
 Create Notes UI
   -Options managed by Category Manager
 
