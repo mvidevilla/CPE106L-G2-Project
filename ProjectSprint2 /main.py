@@ -95,8 +95,8 @@ def update_details():
     updateWindow.minsize(230, 100)
     updateWindow.title("Update")
 
-    tk.Label(updateWindow, text="New Name:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.NE)
-    tk.Label(updateWindow, text="New Category").grid(row=1, column=0, padx=5, pady=5, sticky=tk.NE)
+    tk.Label(updateWindow, text="New Name:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.NW)
+    tk.Label(updateWindow, text="New Category").grid(row=1, column=0, padx=5, pady=5, sticky=tk.NW)
 
     noteIn = tk.Entry(updateWindow)
     noteIn.grid(row=0, column=1, padx=5, pady=5)
@@ -160,8 +160,8 @@ def update_details():
         updateWindow.destroy()
         load_notes()
 
-    tk.Button(updateWindow, text="Save", command=save).grid(row=2, column=0, sticky=tk.NW, padx=5)
-    tk.Button(updateWindow, text="Discard", command=discard).grid(row=2, column=1, sticky=tk.NE, padx=5)
+    tk.Button(updateWindow, text="Save", command=save).grid(row=2, column=1, sticky=tk.NW, padx=10)
+    tk.Button(updateWindow, text="Discard", command=discard).grid(row=2, column=1, sticky=tk.NE, padx=10)
 
 root = tk.Tk()
 root.title("Notes Organization System")
