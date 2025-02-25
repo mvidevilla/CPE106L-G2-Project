@@ -1,10 +1,5 @@
 Codes to implement
 
-Sorting Function for dropbox
-  -Sorts listbox content
-  -Will show default when "Sort by" is selected
-  -Automatically sorts when options are selected
-
 Group by category Function for dropbox
   -Groups listbox content by hiding notes not part of category
   -Will show default when "Group by" is selected
