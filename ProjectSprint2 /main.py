@@ -36,8 +36,11 @@ def discard_changes():
     disableFuncs()
 
 def disableFuncs():
+    tEditor.delete(1.0, tk.END)
     saveButton.config(state=tk.DISABLED)
+    deleteButton.config(state=tk.DISABLED)
     discardButton.config(state=tk.DISABLED)
+    updateNoteDetails.config(state=tk.DISABLED)
     tEditor.config(state=tk.DISABLED)
     notesList.selection_clear(0, tk.END)
 
@@ -56,9 +59,10 @@ def loadEditorBox(*event):
     tEditor.delete(1.0, tk.END)
     tEditor.insert(tk.END, content)
 
+    deleteButton.config(state=tk.NORMAL)
     saveButton.config(state=tk.NORMAL, command=lambda: save_changes(file_path))
     discardButton.config(state=tk.NORMAL, command=discard_changes)
-
+    updateNoteDetails.config(state=tk.NORMAL, command=update_details)
 
 def createButtonFunc():
     create_note()
@@ -76,59 +80,88 @@ def deleteTarget():
     if confirm:
         delete_note(name)
         load_notes()
+        disableFuncs()
 
-def update_details(refresh_callback=None):
-    new_window = tk.Toplevel()
-
-    selected_index = notesList.curselection()
-    if not selected_index:
+def update_details():
+    findTarget = notesList.curselection()
+    if not findTarget:
+        messagebox.showerror("Error, No note Selected. Select a note to edit")
         return
-    else:
-        selected_note = notesList.get(selected_index)
-        note_name, note_cat = selected_note.split(" | ")
+    
+    selectedNote = notesList.get(findTarget)
+    oldName, oldCat = selectedNote.split(" | ")
 
-        new_window.title("Update ")
+    updateWindow = tk.Toplevel()
+    updateWindow.minsize(230, 100)
+    updateWindow.title("Update")
 
-        tk.Label(new_window, text="Note Name:").grid(row=0, column=0, padx=5, pady=5)
-        tk.Label(new_window, text="Category:").grid(row=1, column=0, padx=5, pady=5)
+    tk.Label(updateWindow, text="New Name:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.NE)
+    tk.Label(updateWindow, text="New Category").grid(row=1, column=0, padx=5, pady=5, sticky=tk.NE)
 
-        note_name_entry = tk.Entry(new_window)
-        category_entry = tk.Entry(new_window)
-        note_name_entry.config(textvariable='f{note_name}')
-        category_entry.config(textvariable='f{note_cat}')
+    noteIn = tk.Entry(updateWindow)
+    noteIn.grid(row=0, column=1, padx=5, pady=5)
+    noteIn.insert(0, oldName)
+    catIn = tk.Entry(updateWindow)
+    catIn.grid(row=1, column=1, padx=5, pady=5)
+    catIn.insert(0, oldCat)
 
-        note_name_entry.grid(row=0, column=1, padx=5, pady=5)
-        category_entry.grid(row=1, column=1, padx=5, pady=5)
+    def save():
+        newName = noteIn.get().strip()
+        newCat = catIn.get().strip()
 
-        def save_note():
-            note_name = note_name_entry.get().strip()
-            category = category_entry.get().strip()
+        if not newName or not newCat:
+            messagebox.showerror("Error", "Both fields must be filled")
+            return
+        conn = sqlite3.connect("notes.db")
+        cursor = conn.cursor()
 
-            if not note_name or not category:
-                messagebox.showerror("Error", "Both fields must be filled!")
-                return
-
-            conn = sqlite3.connect("notes.db")
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT 1 FROM notes WHERE noteName = ?", (note_name,))
-            if cursor.fetchone():
-                messagebox.showerror("Error", "A note with this name already exists. Choose a different name.")
-                conn.close()
-                return
-
-            file_path = os.path.join("motes.db", f"{note_name}.txt")
-
-            conn.commit()
+        cursor.execute("SELECT 1 FROM notes WHERE noteName = ?", (newName,))
+        if cursor.fetchone() and newName != oldName:
+            messagebox("Error", "A note with this name already exists. Choose a different dame")
             conn.close()
+            return
+        
+        cursor.execute("SELECT filePath from notes WHERE noteName = ?", (oldName,))
+        result = cursor.fetchone()
 
-            messagebox.showinfo("Success", f"Note '{note_name}' updated successfully!")
-            new_window.destroy()
+        if not result:
+            messagebox.showerror("Error", "Note not in database")
+            conn.close()
+            return
+        
+        old_path = result[0]
+        new_path = old_path.replace(oldName, newName)
+        if os.path.exists(old_path):
+            os.rename(old_path, new_path)
 
-            if refresh_callback:
-                refresh_callback()
+        with open(new_path, "r+") as file:
+            lines = file.readlines()
+            if len(lines)>=2:
+                lines[0] = f"Note: {newName}\n"
+                lines[1] = f"Note: {newCat}\n"
+            file.seek(0)
+            file.writelines(lines)
+            file.truncate()
 
-        tk.Button(new_window, text="Save Changes", command=save_note).grid(row=2, columnspan=2, pady=10)
+        cursor.execute("""
+            UPDATE notes 
+            SET noteName = ?, category = ?, filePath = ? 
+            WHERE noteName = ?
+        """, (newName, newCat, new_path, oldName))
+        conn.commit()
+        conn.close()
+
+        messagebox.showinfo("Success", f"Note {oldName} updated to {newName}.")
+        updateWindow.destroy()
+        disableFuncs()
+        load_notes()
+
+    def discard():
+        updateWindow.destroy()
+        load_notes()
+
+    tk.Button(updateWindow, text="Save", command=save).grid(row=2, column=0, sticky=tk.NW, padx=5)
+    tk.Button(updateWindow, text="Discard", command=discard).grid(row=2, column=1, sticky=tk.NE, padx=5)
 
 root = tk.Tk()
 root.title("Notes Organization System")
@@ -143,7 +176,7 @@ createButton = tk.Button(frame, text="Create Note", command=lambda: create_note(
 createButton.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 createButton.config(width=25)
 
-deleteButton = tk.Button(frame, text="Delete Note", command=deleteTarget)
+deleteButton = tk.Button(frame, text="Delete Note", command=deleteTarget, state=tk.DISABLED)
 deleteButton.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 deleteButton.config(width=25)
 
@@ -168,7 +201,6 @@ groupOpt = [
     "Group by"
 ]
 
-
 sortVar = tk.StringVar(frame)
 sortVar.set(sortOpt[0])
 
@@ -183,7 +215,7 @@ grouping = tk.OptionMenu(frame, groupVar, *groupOpt)
 grouping.grid(row=3, column=0, sticky=tk.W, padx=1, pady=5)
 grouping.config(width=24) 
 
-updateNoteDetails = tk.Button(frame, text="Update Note Details", command=update_details)
+updateNoteDetails = tk.Button(frame, text="Update Note Details", command=update_details, state=tk.DISABLED)
 updateNoteDetails.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
 updateNoteDetails.config(width=25)
 
@@ -222,7 +254,6 @@ def find_in_notes(search_term):
         messagebox.showinfo("No Results", "No notes contain the searched term.")
         load_notes()
 
-
 searchBox = tk.Text(frame, width=22,height=2)
 searchBox.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
 searchBox.config(yscrollcommand=scrollbar.set)
@@ -238,8 +269,8 @@ header.grid(row=7,column=0,sticky=tk.W, padx=5)
 
 notesList = tk.Listbox(frame, width=30, height=20)
 notesList.grid(row=8, column=0, padx=5, pady=5, sticky=tk.W)
-notesList.bind("<Double-Button-1>", loadEditorBox)
 
+notesList.bind("<Double-Button-1>", loadEditorBox)
 sortVar.trace_add("write", lambda *args: load_notes())
 groupVar.trace_add("write", lambda *args: load_notes())
 
