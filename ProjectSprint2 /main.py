@@ -187,13 +187,49 @@ updateNoteDetails = tk.Button(frame, text="Update Note Details", command=update_
 updateNoteDetails.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
 updateNoteDetails.config(width=25)
 
+def find_in_notes(search_term):
+    """Searches for notes that contain the given term, ignoring the first 4 lines."""
+    if not search_term:
+        messagebox.showerror("Error", "Please enter a search term.")
+        load_notes()
+        return
+
+    conn = sqlite3.connect("notes.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT noteName, category, filePath FROM notes")
+    notes = cursor.fetchall()
+    conn.close()
+
+    matching_notes = []
+
+    for note_name, category, file_path in notes:
+        if os.path.exists(file_path):  # Check if the file exists
+            with open(file_path, "r") as file:
+                lines = file.readlines()  # Read all lines
+                
+                # Ignore the first 4 lines
+                content = "".join(lines[4:]) if len(lines) > 4 else ""
+
+                if search_term.lower() in content.lower():
+                    matching_notes.append(f"{note_name} | {category}")
+
+    notesList.delete(0, tk.END)  # Clear the listbox
+    if matching_notes:
+        for note in matching_notes:
+            notesList.insert(tk.END, note)
+    else:
+        messagebox.showinfo("No Results", "No notes contain the searched term.")
+        load_notes()
+
+
 searchBox = tk.Text(frame, width=22,height=2)
 searchBox.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
 searchBox.config(yscrollcommand=scrollbar.set)
 scrollbar.grid(column=0, row=5, sticky=tk.E)
 scrollbar.config(command=searchBox.yview)
 
-findButton = tk.Button(frame, text="Find in Notes")
+findButton = tk.Button(frame, text="Find in Notes", command=lambda: find_in_notes(searchBox.get("1.0", tk.END).strip()))
 findButton.grid(row=6, column=0, padx=5, pady=5, sticky=tk.W)
 findButton.config(width=25)
 
