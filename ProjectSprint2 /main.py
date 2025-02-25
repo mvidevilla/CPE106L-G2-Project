@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import scrolledtext
 import sqlite3
-from CRUD import init_db, create_note, save_note
+import os
+from tkinter import scrolledtext, messagebox
+from CRUD import init_db, create_note, save_note, load_note, delete_note
 from sorting import get_sorted_notes
 from group import get_grouped_notes
 
@@ -20,31 +21,121 @@ def load_notes():
     for note in notes:
         notesList.insert(tk.END, f"{note[0]} | {note[1]}")
 
+def save_changes(file_path):
+    updated_content = tEditor.get(1.0, tk.END).strip()
+    saveButton.config(state=tk.ACTIVE)
+    discardButton.config(state=tk.ACTIVE)
+    save_note(file_path, updated_content)
+    tEditor.delete(1.0, tk.END)
+    disableFuncs()
 
-def loadEditorBox(event):
-    tEditor = scrolledtext.ScrolledText(root, width=41, height=37)
-    tEditor.grid(padx=5, sticky=tk.NE, row=0, column=1,rowspan=7)
+def discard_changes():
+    saveButton.config(state=tk.ACTIVE)
+    discardButton.config(state=tk.ACTIVE)
+    tEditor.delete(1.0, tk.END)
+    disableFuncs()
 
-    saveButton = tk.Button(root, text="Save Changes", state=tk.DISABLED)
-    saveButton.grid(padx=5, sticky=tk.NE, row=7, column=1)
+def disableFuncs():
+    saveButton.config(state=tk.DISABLED)
+    discardButton.config(state=tk.DISABLED)
+    tEditor.config(state=tk.DISABLED)
+    notesList.selection_clear(0, tk.END)
+
+def loadEditorBox(*event):
+    selected_index = notesList.curselection()
+    if not selected_index:
+        return
+
+    selected_note = notesList.get(selected_index)
+    note_name = selected_note.split(" | ")[0]
+
+    content, file_path = load_note(note_name)
+    if content is None:
+        return
+    tEditor.config(state=tk.NORMAL)
+    tEditor.delete(1.0, tk.END)
+    tEditor.insert(tk.END, content)
+
+    saveButton.config(state=tk.NORMAL, command=lambda: save_changes(file_path))
+    discardButton.config(state=tk.NORMAL, command=discard_changes)
+
 
 def createButtonFunc():
     create_note()
 
-def sort(*sortOpt):
-    orderBy = sortVar.get()
-    notes = get_sorted_notes(orderBy)
+def deleteTarget():
+    index = notesList.curselection()
+    if not index:
+        messagebox.showerror("Error", "No note selected")
+        return
+    
+    note = notesList.get(index)
+    name = note.split(" | ")[0]
 
-    notesList.delete(0, tk.END)
-    for note in notes:
-        notesList.insert(tk.END, f"{note[0]} | {note[1]}")
+    confirm = messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete '{name}'?")
+    if confirm:
+        delete_note(name)
+        load_notes()
+
+def update_details(refresh_callback=None):
+    new_window = tk.Toplevel()
+
+    selected_index = notesList.curselection()
+    if not selected_index:
+        return
+    else:
+        selected_note = notesList.get(selected_index)
+        note_name, note_cat = selected_note.split(" | ")
+
+        new_window.title("Update ")
+
+        tk.Label(new_window, text="Note Name:").grid(row=0, column=0, padx=5, pady=5)
+        tk.Label(new_window, text="Category:").grid(row=1, column=0, padx=5, pady=5)
+
+        note_name_entry = tk.Entry(new_window)
+        category_entry = tk.Entry(new_window)
+        note_name_entry.config(textvariable='f{note_name}')
+        category_entry.config(textvariable='f{note_cat}')
+
+        note_name_entry.grid(row=0, column=1, padx=5, pady=5)
+        category_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        def save_note():
+            note_name = note_name_entry.get().strip()
+            category = category_entry.get().strip()
+
+            if not note_name or not category:
+                messagebox.showerror("Error", "Both fields must be filled!")
+                return
+
+            conn = sqlite3.connect("notes.db")
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT 1 FROM notes WHERE noteName = ?", (note_name,))
+            if cursor.fetchone():
+                messagebox.showerror("Error", "A note with this name already exists. Choose a different name.")
+                conn.close()
+                return
+
+            file_path = os.path.join("motes.db", f"{note_name}.txt")
+
+            conn.commit()
+            conn.close()
+
+            messagebox.showinfo("Success", f"Note '{note_name}' updated successfully!")
+            new_window.destroy()
+
+            if refresh_callback:
+                refresh_callback()
+
+        tk.Button(new_window, text="Save Changes", command=save_note).grid(row=2, columnspan=2, pady=10)
 
 root = tk.Tk()
 root.title("Notes Organization System")
 
 frame = tk.Frame(root)
 frame.grid()
-root.minsize(560,660)
+root.minsize(560,635)
 
 scrollbar = tk.Scrollbar(frame, orient=tk.VERTICAL)
 
@@ -52,9 +143,19 @@ createButton = tk.Button(frame, text="Create Note", command=lambda: create_note(
 createButton.grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
 createButton.config(width=25)
 
-deleteButton = tk.Button(frame, text="Delete Note")
+deleteButton = tk.Button(frame, text="Delete Note", command=deleteTarget)
 deleteButton.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 deleteButton.config(width=25)
+
+tEditor = scrolledtext.ScrolledText(root, width=41, height=37)
+tEditor.grid(padx=5, sticky=tk.NE, row=0, column=1, rowspan=7, columnspan=2)
+tEditor.config(state=tk.DISABLED)
+
+saveButton = tk.Button(root, text="Save Changes", state=tk.DISABLED)
+saveButton.grid(sticky=tk.SE, row=0, column=2)
+
+discardButton = tk.Button(root, text="Discard Changes", state=tk.DISABLED)
+discardButton.grid(sticky=tk.SW, row=0, column=1)
 
 sortOpt = [
     "Sort by",
@@ -63,7 +164,6 @@ sortOpt = [
     "Date Created (Ascending)",
     "Date Created (Descending)"
 ]
-
 groupOpt = [
     "Group by"
 ]
@@ -83,9 +183,9 @@ grouping = tk.OptionMenu(frame, groupVar, *groupOpt)
 grouping.grid(row=3, column=0, sticky=tk.W, padx=1, pady=5)
 grouping.config(width=24) 
 
-manageCategories = tk.Button(frame, text="Manage Categories")
-manageCategories.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
-manageCategories.config(width=25)
+updateNoteDetails = tk.Button(frame, text="Update Note Details", command=update_details)
+updateNoteDetails.grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
+updateNoteDetails.config(width=25)
 
 searchBox = tk.Text(frame, width=22,height=2)
 searchBox.grid(row=5, column=0, padx=5, pady=5, sticky=tk.W)
@@ -108,4 +208,5 @@ sortVar.trace_add("write", lambda *args: load_notes())
 groupVar.trace_add("write", lambda *args: load_notes())
 
 load_notes()
+loadEditorBox()
 root.mainloop()
