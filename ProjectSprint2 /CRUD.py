@@ -28,6 +28,7 @@ def init_db():
 def create_note(refresh_callback=None):
     """Opens a new window for entering note details and saves the note to the database."""
     new_window = tk.Toplevel()
+    new_window.minsize(290, 100)
     new_window.title("Create New Note")
 
     # Labels and Entry Fields
@@ -76,8 +77,12 @@ def create_note(refresh_callback=None):
         if refresh_callback:
             refresh_callback()
 
+    def cancel():
+        new_window.destroy()
+
     # Save Button
-    tk.Button(new_window, text="Save Note", command=save_note).grid(row=2, columnspan=2, pady=10)
+    tk.Button(new_window, text="Create Note", command=save_note).grid(row=2, column=1, pady=10, sticky=tk.NW)
+    tk.Button(new_window, text="Cancel", command=cancel).grid(row=2, column=1, pady=10, sticky=tk.NE)
 
 
 def read_note():
