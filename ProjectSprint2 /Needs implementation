@@ -1,10 +1,5 @@
 Codes to implement
 
-Group by category Function for dropbox
-  -Groups listbox content by hiding notes not part of category
-  -Will show default when "Group by" is selected
-  -Automatically grpups when options are selected
-
 Category Manager UI
   -Can edit groupOpt list to manage category options:
     -Create category
