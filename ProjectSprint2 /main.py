@@ -2,21 +2,23 @@ import tkinter as tk
 from tkinter import scrolledtext
 import sqlite3
 from CRUD import init_db, create_note, save_note
+from sorting import get_sorted_notes
+from group import get_grouped_notes
 
 init_db()
 
 def load_notes():
-    conn = sqlite3.connect("notes.db")
-    cursor = conn.cursor()
+    category = groupVar.get()
+    order_by = sortVar.get()
 
-    cursor.execute("SELECT noteName, category FROM notes")
-    notes = cursor.fetchall()
+    if category != "Group by":
+        notes = get_grouped_notes(category)
+    else:
+        notes = get_sorted_notes(order_by)
+    
     notesList.delete(0, tk.END)
-
     for note in notes:
-        note_entry = f"{note[0]} | {note[1]}"
-        notesList.insert(tk.END, note_entry)
-    conn.close()
+        notesList.insert(tk.END, f"{note[0]} | {note[1]}")
 
 
 def loadEditorBox(event):
@@ -28,7 +30,14 @@ def loadEditorBox(event):
 
 def createButtonFunc():
     create_note()
-    load_notes()
+
+def sort(*sortOpt):
+    orderBy = sortVar.get()
+    notes = get_sorted_notes(orderBy)
+
+    notesList.delete(0, tk.END)
+    for note in notes:
+        notesList.insert(tk.END, f"{note[0]} | {note[1]}")
 
 root = tk.Tk()
 root.title("Notes Organization System")
@@ -58,6 +67,7 @@ sortOpt = [
 groupOpt = [
     "Group by"
 ]
+
 
 sortVar = tk.StringVar(frame)
 sortVar.set(sortOpt[0])
@@ -93,6 +103,9 @@ header.grid(row=7,column=0,sticky=tk.W, padx=5)
 notesList = tk.Listbox(frame, width=30, height=20)
 notesList.grid(row=8, column=0, padx=5, pady=5, sticky=tk.W)
 notesList.bind("<Double-Button-1>", loadEditorBox)
+
+sortVar.trace_add("write", lambda *args: load_notes())
+groupVar.trace_add("write", lambda *args: load_notes())
 
 load_notes()
 root.mainloop()
