@@ -246,13 +246,24 @@ def center_window(window, width=300, height=200):
     
     window.geometry(f"{width}x{height}+{x}+{y}")
 
-def center_window(window, width=300, height=200):
-    """Centers a given Tkinter window on the screen."""
-    window.update_idletasks()
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    
-    x = (screen_width // 2) - (width // 2)
-    y = (screen_height // 2) - (height // 2)
-    
-    window.geometry(f"{width}x{height}+{x}+{y}")
+def delete_note(note_name):
+
+    conn = sqlite3.connect("notes.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT filePath FROM notes WHERE noteName = ?", (note_name,))
+    result = cursor.fetchone()
+
+    if not result:
+        messagebox.showerror("Error", "Note not found.")
+        conn.close()
+        return
+
+    file_path = result[0]
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    cursor.execute("DELETE FROM notes WHERE noteName = ?", (note_name,))
+    conn.commit()
+    conn.close()
+    messagebox.showinfo("Success", f"Note '{note_name}' deleted.")
