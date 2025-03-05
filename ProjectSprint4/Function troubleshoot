@@ -1,5 +1,5 @@
 === Create Note Functions ===
--Missing create note button in new window
+-UI not updated
 
 === Delete Note Function ===
 -Needs testing
@@ -11,7 +11,7 @@
 -Needs testing
 
 === Update Function ===
--Needs testing
+-Missing save button in pop up
 
 === Find in Notes Function ===
 -Needs testing
