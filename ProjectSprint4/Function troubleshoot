@@ -2,13 +2,13 @@
 -UI not updated
 
 === Delete Note Function ===
--Needs testing
+-Tested, no bugs
 
 === Sorting Function ===
--Needs testing
+-Tested, no bugs
 
 === Grouping Function ===
--Needs testing
+-Tested, no bugs
 
 === Update Function ===
 -Missing save button in pop up (FIXED)
