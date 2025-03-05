@@ -3,7 +3,7 @@ import customtkinter as ctk  # Import CustomTkinter
 from tkinter import messagebox  # Import messagebox for pop-up dialogs
 import sqlite3
 import os
-from CRUD import init_db, create_note, load_note, delete_note
+from CRUD import init_db, create_note, load_note, delete_note, center_window
 from sorting import get_sorted_notes
 from group import get_grouped_notes
 
@@ -137,14 +137,16 @@ def update_details():
     oldCat = oldCat.strip()
 
     updateWindow = ctk.CTkToplevel()
-    updateWindow.minsize(230, 100)
+    updateWindow.minsize(320, 120)
     updateWindow.title("Update")
     updateWindow.attributes('-topmost', True)
     updateWindow.focus_force()
+
+    center_window(updateWindow, 320, 120)
     
 
-    ctk.CTkLabel(updateWindow, text="New Name:").grid(row=0, column=0, padx=5, pady=5, sticky="nw")
-    ctk.CTkLabel(updateWindow, text="New Category").grid(row=1, column=0, padx=5, pady=5, sticky="nw")
+    ctk.CTkLabel(updateWindow, text="New Name:").grid(row=0, column=0, padx=5, pady=5, sticky="ne")
+    ctk.CTkLabel(updateWindow, text="New Category:").grid(row=1, column=0, padx=5, pady=5, sticky="ne")
 
     noteIn = ctk.CTkEntry(updateWindow)
     noteIn.grid(row=0, column=1, padx=5, pady=5)
@@ -198,9 +200,8 @@ def update_details():
         """, (newName, newCat, new_path, oldName))
         conn.commit()
         conn.close()
-
-        messagebox.showinfo("Success", f"Note {oldName} updated to {newName}.")
         updateWindow.destroy()
+        messagebox.showinfo("Success", f"Note {oldName} updated to {newName}.")
         disableFuncs()
         load_notes()
 
@@ -218,7 +219,7 @@ def update_details():
 root = ctk.CTk()
 root.title("Notes Organization System")
 
-root.minsize(560, 635)
+root.minsize(658, 655)
 frame = ctk.CTkFrame(root)
 frame.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -280,13 +281,13 @@ sortVar = ctk.StringVar(frame)
 sortVar.set(sortOpt[0])
 
 sorting = ctk.CTkOptionMenu(frame, variable=sortVar, values=sortOpt)
-sorting.grid(row=2, column=0, sticky="w", padx=1, pady=5)
+sorting.grid(row=2, column=0, sticky="w", padx=5, pady=5)
 
 groupVar = ctk.StringVar(frame)
 groupVar.set(groupOpt[0])
 
 grouping = ctk.CTkOptionMenu(frame, variable=groupVar, values=groupOpt)
-grouping.grid(row=3, column=0, sticky="w", padx=1, pady=5)
+grouping.grid(row=3, column=0, sticky="w", padx=5, pady=5)
 
 updateNoteDetails = ctk.CTkButton(frame, text="Update Note Details", command=update_details, state="disabled", fg_color="#9E9E9E")  # Gray
 updateNoteDetails.grid(row=4, column=0, padx=5, pady=5, sticky="w")
@@ -351,4 +352,5 @@ groupVar.trace_add("write", lambda *args: load_notes())
 # Load notes and start the application
 load_notes()
 loadEditorBox()
+center_window(root, 658, 655)
 root.mainloop()
