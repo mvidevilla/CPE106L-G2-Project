@@ -128,7 +128,7 @@ def deleteTarget():
 def update_details():
     findTarget = notesList.curselection()
     if not findTarget:
-        messagebox.showerror("Error, No note Selected. Select a note to edit")
+        messagebox.showerror("Error", "No note Selected. Select a note to edit")
         return
     
     selectedNote = notesList.get(findTarget)
