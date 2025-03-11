@@ -223,10 +223,10 @@ root.minsize(658, 655)
 frame = ctk.CTkFrame(root)
 frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-createButton = ctk.CTkButton(frame, text="Create Note", command=lambda: create_note(load_notes), fg_color="#4CAF50")  # Green
+createButton = ctk.CTkButton(frame, text="Create Note", command=lambda: create_note(load_notes), fg_color="#4CAF50", width=200)  # Green
 createButton.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-deleteButton = ctk.CTkButton(frame, text="Delete Note", command=deleteTarget, fg_color="#F44336", state="disabled")  # Red
+deleteButton = ctk.CTkButton(frame, text="Delete Note", command=deleteTarget, fg_color="#F44336", state="disabled", width=200)  # Red
 deleteButton.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
 ctk.CTkLabel(frame, text="Note Information:", font=("Helvetica", 14, "bold")).grid(row=0, column=1, sticky="nw", padx=5, pady=5)
@@ -280,16 +280,16 @@ groupOpt = [
 sortVar = ctk.StringVar(frame)
 sortVar.set(sortOpt[0])
 
-sorting = ctk.CTkOptionMenu(frame, variable=sortVar, values=sortOpt)
+sorting = ctk.CTkOptionMenu(frame, variable=sortVar, values=sortOpt, width=200)
 sorting.grid(row=2, column=0, sticky="w", padx=5, pady=5)
 
 groupVar = ctk.StringVar(frame)
 groupVar.set(groupOpt[0])
 
-grouping = ctk.CTkOptionMenu(frame, variable=groupVar, values=groupOpt)
+grouping = ctk.CTkOptionMenu(frame, variable=groupVar, values=groupOpt, width=200)
 grouping.grid(row=3, column=0, sticky="w", padx=5, pady=5)
 
-updateNoteDetails = ctk.CTkButton(frame, text="Update Note Details", command=update_details, state="disabled", fg_color="#9E9E9E")  # Gray
+updateNoteDetails = ctk.CTkButton(frame, text="Update Note Details", command=update_details, state="disabled", fg_color="#9E9E9E", width=200)  # Gray
 updateNoteDetails.grid(row=4, column=0, padx=5, pady=5, sticky="w")
 
 # Search functionality
@@ -331,7 +331,7 @@ def find_in_notes(search_term):
 searchBox = ctk.CTkEntry(frame, width=200)
 searchBox.grid(row=5, column=0, padx=5, pady=5, sticky="w")
 
-findButton = ctk.CTkButton(frame, text="Find in Notes", command=lambda: find_in_notes(searchBox.get().strip()), fg_color="#9E9E9E")  # Gray
+findButton = ctk.CTkButton(frame, text="Find in Notes", command=lambda: find_in_notes(searchBox.get().strip()), fg_color="#9E9E9E", width=200)  # Gray
 findButton.grid(row=6, column=0, padx=5, pady=5, sticky="w")
 
 # Updated the header text to use ":" as the separator
