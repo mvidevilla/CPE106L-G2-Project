@@ -3,11 +3,14 @@ import os
 from datetime import datetime
 from tkinter import messagebox, ttk
 import tkinter as tk
+import customtkinter as ctk
 
 DB_FILE = "notes.db"
 NOTES_DIR = "notes"
 
 os.makedirs(NOTES_DIR, exist_ok=True)
+ctk.set_appearance_mode("light")  # Light mode
+ctk.set_default_color_theme("green")  # Green theme
 
 def init_db():
     """Initializes the database by creating the notes table if it doesn't exist."""
@@ -28,50 +31,54 @@ def init_db():
 def create_note(refresh_callback=None):
     """Opens a new window for entering note details and saves the note to the database."""
     new_window = tk.Toplevel()
-    new_window.minsize(430, 110)
+    new_window.minsize(570, 150)
     new_window.title("Create New Note")
-
-    center_window(new_window, 430, 120)
+    center_window(new_window, 570, 150)
 
     use_existing_var = tk.IntVar()
 
-    tk.Label(new_window, text="Note Name:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.NE)
-    tk.Label(new_window, text="Category:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.NE)
+    tk.Label(new_window, text="Note Name:", font=("Helvetica", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky=tk.E)
+    tk.Label(new_window, text="Category:", font=("Helvetica", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky=tk.E)
 
-    note_name_entry = tk.Entry(new_window, width=30)
+    note_name_entry = ctk.CTkEntry(new_window, width=200)
     note_name_entry.grid(row=0, column=1, padx=5, pady=5)
 
-    category_entry = tk.Entry(new_window, width=30)
+    # Entry field for manual category entry
+    category_entry = ctk.CTkEntry(new_window, width=200)
     category_entry.grid(row=1, column=1, padx=5, pady=5)
 
+    # Fetch distinct categories from the database and add a default prompt
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT category FROM notes")
     categories = ["Select a category"] + [row[0] for row in cursor.fetchall()]
     conn.close()
 
+    # Replace ttk.Combobox with CTkOptionMenu
     category_var = tk.StringVar(new_window)
     category_var.set(categories[0])
-    category_dropdown = ttk.Combobox(new_window, textvariable=category_var, values=categories, state="readonly", width=27)
+    category_dropdown = ctk.CTkOptionMenu(new_window, variable=category_var, values=categories, width=200)
+    # Initially hide the dropdown so that the entry field is used by default.
     category_dropdown.grid(row=1, column=1, padx=5, pady=5)
     category_dropdown.grid_remove()
 
     def toggle_category_selection():
         """Show dropdown & disable entry when checked, hide dropdown & enable entry when unchecked."""
-        if use_existing_var.get():  # Checkbox is checked
-            category_entry.grid_remove()  # Hide entry
-            category_dropdown.grid()  # Show dropdown
-        else:  # Checkbox is unchecked
+        if use_existing_var.get():
+            category_entry.grid_remove()  # Hide manual entry
+            category_dropdown.grid()      # Show dropdown
+        else:
             category_dropdown.grid_remove()  # Hide dropdown
-            category_entry.grid()  # Show entry
+            category_entry.grid()            # Show manual entry
 
-    # Checkbox to toggle category selection
-    checkbox = tk.Checkbutton(new_window, text="Use existing category", variable=use_existing_var, command=toggle_category_selection)
+    # Checkbox to toggle between manual entry and dropdown
+    checkbox = ctk.CTkCheckBox(new_window, text="Use existing category", variable=use_existing_var, command=toggle_category_selection)
     checkbox.grid(row=1, column=2, padx=5, pady=5)
 
     def save_note():
         """Save the note with either the selected dropdown category or manually entered category."""
         note_name = note_name_entry.get().strip()
+        # Use dropdown value if checkbox is checked; otherwise, use entry value.
         category = category_var.get().strip() if use_existing_var.get() else category_entry.get().strip()
 
         if not note_name or not category or category == "Select a category":
@@ -110,8 +117,8 @@ def create_note(refresh_callback=None):
         new_window.destroy()
 
     # Save and Cancel buttons
-    tk.Button(new_window, text="Create Note", command=save_note).grid(row=2, column=1, pady=10, sticky=tk.W)
-    tk.Button(new_window, text="Cancel", command=cancel).grid(row=2, column=2, pady=10, sticky=tk.W)
+    ctk.CTkButton(new_window, text="Create Note", command=save_note).grid(row=2, column=1, pady=10, sticky=tk.W)
+    ctk.CTkButton(new_window, text="Cancel", command=cancel, fg_color="#F44336").grid(row=2, column=2, pady=10, sticky=tk.W)
 
 def read_note():
     conn = sqlite3.connect(DB_FILE)
